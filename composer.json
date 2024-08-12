@@ -1,0 +1,29 @@
+{
+    "name": "deemru/fetcher",
+    "description": "Simple wrapper around cURL",
+    "keywords": [ "curl", "get", "post", "http", "https" ],
+    "homepage": "http://github.com/deemru/Fetcher",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dmitrii Pichulin",
+            "email": "deem@deem.ru"
+        }
+    ],
+    "require": {
+        "php": ">=5.6",
+        "composer/ca-bundle": "*",
+        "ext-curl": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "deemru\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": [
+            "@php test/selftest.php"
+        ]
+    }
+}
