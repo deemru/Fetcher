@@ -1,6 +1,6 @@
 # Fetcher
 
-[![packagist](https://img.shields.io/packagist/v/deemru/fetcher.svg)](https://packagist.org/packages/deemru/fetcher) [![php-v](https://img.shields.io/packagist/php-v/deemru/fetcher.svg)](https://packagist.org/packages/deemru/fetcher)   [![GitHub](https://img.shields.io/github/actions/workflow/status/deemru/Fetcher/php.yml?label=github%20actions)](https://github.com/deemru/Fetcher/actions/workflows/php.yml) [![codacy](https://img.shields.io/codacy/grade/94562bc5ffab447a9a8f0045502c24a6.svg?label=codacy)](https://app.codacy.com/gh/deemru/Fetcher/files) [![license](https://img.shields.io/packagist/l/deemru/fetcher.svg)](https://packagist.org/packages/deemru/fetcher)
+[![packagist](https://img.shields.io/packagist/v/deemru/fetcher.svg)](https://packagist.org/packages/deemru/fetcher) [![php-v](https://img.shields.io/packagist/php-v/deemru/fetcher.svg)](https://packagist.org/packages/deemru/fetcher)   [![GitHub](https://img.shields.io/github/actions/workflow/status/deemru/Fetcher/php.yml?label=github%20actions)](https://github.com/deemru/Fetcher/actions/workflows/php.yml) [![codacy](https://img.shields.io/codacy/grade/4f8397f3ef094012a7f3ebad898999e0.svg?label=codacy)](https://app.codacy.com/gh/deemru/Fetcher/files) [![license](https://img.shields.io/packagist/l/deemru/fetcher.svg)](https://packagist.org/packages/deemru/fetcher)
 
 [Fetcher](https://github.com/deemru/Fetcher) implements a simple wrapper around [cURL](https://www.php.net/manual/book.curl.php).
 
