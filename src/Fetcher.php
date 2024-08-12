@@ -7,7 +7,7 @@ use Composer\CaBundle\CaBundle;
 class Fetcher
 {
     private $logger;
-    public $lastError;
+    private $lastError;
 
     private $hosts;
     private $timeoutConnect = 5;
@@ -32,6 +32,11 @@ class Fetcher
         $this->lastError = $message;
     }
 
+    public function getLastError()
+    {
+        return $this->lastError;
+    }
+
     public function setTimeoutConnect( $timeout )
     {
         $this->timeoutConnect = $timeout;
@@ -46,7 +51,7 @@ class Fetcher
 
     public function setOptions( $options )
     {
-        $this->options = $options;
+        $this->options = isset( $options ) ? $options : [];
         return $this;
     }
 
@@ -64,7 +69,7 @@ class Fetcher
 
     public function setLogger( $logger )
     {
-        if( is_object( $logger ) && method_exists( $logger, 'warning' ) && method_exists( $logger, 'error' ) )
+        if( is_object( $logger ) && method_exists( $logger, 'error' ) )
             $this->logger = $logger;
         return $this;
     }
@@ -181,6 +186,8 @@ class Fetcher
      */
     public function fetch( $url, $post = false, $data = null, $ignoreCodes = null, $headers = null )
     {
+        $this->lastError = false;
+
         if( !$post && null !== ( $fetch = $this->getCache( $url ) ) )
             return $fetch;
 
@@ -382,5 +389,29 @@ class Fetcher
         }
 
         return null;
+    }
+
+    public function resetCache()
+    {
+        $this->cache = [];
+    }
+
+    public function setBest( $url, $scoreFunction )
+    {
+        $multis = $this->fetchMulti( $url );
+        $scores = [];
+        $i = 0;
+        foreach( $multis as $values )
+            $scores[$i++] = $scoreFunction( $values[0], $values[1] );
+        arsort( $scores );
+        $hosts = [];
+        $curls = [];
+        foreach( $scores as $key => $value )
+        {
+            $hosts[] = $this->hosts[$key];
+            $curls[] = $this->curls[$key];
+        }
+        $this->hosts = $hosts;
+        $this->curls = $curls;
     }
 }
