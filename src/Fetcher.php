@@ -406,7 +406,7 @@ class Fetcher
         arsort( $scores );
         $hosts = [];
         $curls = [];
-        foreach( $scores as $key => $value )
+        foreach( $scores as $key => $_ )
         {
             $hosts[] = $this->hosts[$key];
             $curls[] = $this->curls[$key];
