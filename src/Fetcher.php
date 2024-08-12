@@ -372,7 +372,9 @@ class Fetcher
     {
         if( $this->timeoutCache > 0 && isset( $this->cache[$key] ) )
         {
-            [ $value, $tt ] = $this->cache[$key];
+            $temp = $this->cache[$key];
+            $value = $temp[0];
+            $tt = $temp[1];
             if( microtime( true ) - $tt < $this->timeoutCache )
                 return $value;
 
