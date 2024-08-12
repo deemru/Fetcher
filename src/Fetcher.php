@@ -214,7 +214,7 @@ class Fetcher
                 if( !$post )
                     $this->setCache( $url, $fetch );
 
-                if( $i !== 0 && $this->strategy === 0 )
+                if( $i !== 0 && $this->strategy === 1 )
                 {
                     $hosts = [ $this->hosts[$i] ];
                     $curls = [ $this->curls[$i] ];
