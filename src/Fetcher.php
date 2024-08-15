@@ -82,31 +82,13 @@ class Fetcher
         return $this;
     }
 
-    static public function host( $host, $common = true )
+    static public function host( $host )
     {
-        if( $common )
-        {
-            static $fetchers;
-            $key = $host;
-            if( !isset( $fetchers[$key] ) )
-                $fetchers[$key] = ( new Fetcher )->setHosts( [ $host ] );
-            return $fetchers[$key];
-        }
-
         return ( new Fetcher )->setHosts( [ $host ] );
     }
 
-    static public function hosts( $hosts, $common = true )
+    static public function hosts( $hosts )
     {
-        if( $common )
-        {
-            static $fetchers;
-            $key = serialize( $hosts );
-            if( !isset( $fetchers[$key] ) )
-                $fetchers[$key] = ( new Fetcher )->setHosts( $hosts );
-            return $fetchers[$key];
-        }
-
         return ( new Fetcher )->setHosts( $hosts );
     }
 
