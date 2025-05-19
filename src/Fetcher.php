@@ -17,19 +17,20 @@ class Fetcher
     private $json = true;
     private $strategy = 0;
 
-    private $curls;
-    private $multiCurl;
+    private $curls = [];
 
     private $cache = [];
-    private $timeoutCache = 0.5;
+    private $cacheTimeout = 0.5;
+    private $cacheLastSet = 0;
+    private $cacheSize = 32;
 
     private function __construct(){}
 
     private function error( $message )
     {
+        $this->lastError = $message;
         if( isset( $this->logger ) )
             return $this->logger->error( $message );
-        $this->lastError = $message;
     }
 
     public function getLastError()
@@ -57,7 +58,13 @@ class Fetcher
 
     public function setTimeoutCache( $timeout )
     {
-        $this->timeoutCache = $timeout;
+        $this->cacheTimeout = $timeout;
+        return $this;
+    }
+
+    public function setCacheSize( $size )
+    {
+        $this->cacheSize = $size;
         return $this;
     }
 
@@ -255,24 +262,23 @@ class Fetcher
                 return false;
         }
 
-        if( !isset( $this->multiCurl ) )
-            $this->multiCurl = curl_multi_init();
+        $multiCurl = curl_multi_init();
 
         for( $i = 0; $i < $n; $i++ )
             if( isset( $this->curls[$i] ) )
-                curl_multi_add_handle( $this->multiCurl, $this->curls[$i] );
+                curl_multi_add_handle( $multiCurl, $this->curls[$i] );
 
         $tt = microtime( true );
         $active = 0;
         for( ;; )
         {
-            if( CURLM_OK != curl_multi_exec( $this->multiCurl, $active ) )
+            if( CURLM_OK != curl_multi_exec( $multiCurl, $active ) )
                 break;
 
             if( $active === 0 )
                 break;
 
-            curl_multi_select( $this->multiCurl );
+            curl_multi_select( $multiCurl );
         }
         $tt = microtime( true ) - $tt;
 
@@ -287,13 +293,14 @@ class Fetcher
                 $data = $this->fetchResult( $data, $host, $curl, $ignoreCodes );
                 $multiData[$host] = $data;
 
-                curl_multi_remove_handle( $this->multiCurl, $curl );
+                curl_multi_remove_handle( $multiCurl, $curl );
                 continue;
             }
 
             $multiData[$host] = [ false, $tt ];
         }
 
+        curl_multi_close( $multiCurl );
         return $multiData;
     }
 
@@ -347,24 +354,30 @@ class Fetcher
 
     private function setCache( $key, $value )
     {
-        if( $this->timeoutCache <= 0 )
+        if( $this->cacheTimeout <= 0 )
             return;
 
-        $value = [ $value, microtime( true ) ];
-        if( count( $this->cache ) >= 256 )
+        $now = microtime( true );
+
+        if( $now - $this->cacheLastSet > $this->cacheTimeout )
             $this->cache = [ $key => $value ];
         else
-            $this->cache[$key] = $value;
+        {
+            if( count( $this->cache ) >= $this->cacheSize )
+                unset( $this->cache[array_rand( $this->cache )] );
+
+            $this->cache[$key] = [ $value, $now ];
+        }
+
+        $this->cacheLastSet = $now;
     }
 
     private function getCache( $key )
     {
-        if( $this->timeoutCache > 0 && isset( $this->cache[$key] ) )
+        if( $this->cacheTimeout > 0 && isset( $this->cache[$key] ) )
         {
-            $temp = $this->cache[$key];
-            $value = $temp[0];
-            $tt = $temp[1];
-            if( microtime( true ) - $tt < $this->timeoutCache )
+            list( $value, $tt ) = $this->cache[$key];
+            if( microtime( true ) - $tt < $this->cacheTimeout )
                 return $value;
 
             unset( $this->cache[$key] );
