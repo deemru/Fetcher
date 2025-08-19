@@ -105,6 +105,18 @@ class Fetcher
         return $decoded === null ? false : $decoded;
     }
 
+    private function js( $v )
+    {
+        if( is_string( $v ) )
+            return $v;
+        if( is_int( $v ) )
+            return (string)$v;
+        $v = json_encode( $v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES );
+        if( false === $v )
+            return '...';
+        return $v;
+    }
+
     private function fetchInit( $host, $connect )
     {
         if( false === ( $curl = curl_init() ) )
@@ -329,10 +341,22 @@ class Fetcher
             if( !isset( $ignoreCodes ) || $errno !== 0 || !in_array( $code, $ignoreCodes ) )
             {
                 $curl_error = curl_error( $curl );
-                if( is_string( $data ) && $this->json && false !== ( $json = $this->jd( $data ) ) && isset( $json['message'] ) )
+                if( is_string( $data ) && $this->json && false !== ( $json = $this->jd( $data ) ) )
                 {
-                    $status = isset( $json['error'] ) ? $json['error'] : ( isset( $json['status'] ) ? $json['status'] : '...' );
-                    $this->error( $host . ' (HTTP ' . $code . '): ' . $status . ' (' . ( isset( $json['message'] ) ? $json['message'] : '...' ) . ')' );
+                    if( isset( $json['error'] ) )
+                        $status = $this->js( $json['error'] );
+                    else
+                    if( isset( $json['status'] ) )
+                        $status = $this->js( $json['status'] );
+                    else
+                        $status = '...';
+
+                    if( isset( $json['message'] ) )
+                        $message = $this->js( $json['message'] );
+                    else
+                        $message = $this->js( $json );
+
+                    $this->error( $host . ' (HTTP ' . $code . '): ' . $status . ' (' . $message . ')' );
                 }
                 else
                     $this->error( $host . ' (HTTP ' . $code . '): cURL ' . $errno . ' (' . ( empty( $curl_error ) ? '...' : $curl_error ) . ')' );
