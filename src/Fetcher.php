@@ -8,6 +8,7 @@ class Fetcher
 {
     private $logger;
     private $lastError;
+    private $lastHttpCode;
 
     private $hosts;
     private $timeoutConnect = 5;
@@ -36,6 +37,11 @@ class Fetcher
     public function getLastError()
     {
         return $this->lastError;
+    }
+
+    public function getLastHttpCode()
+    {
+        return $this->lastHttpCode;
     }
 
     public function setTimeoutConnect( $timeout )
@@ -188,6 +194,7 @@ class Fetcher
     public function fetch( $url, $post = false, $data = null, $ignoreCodes = null, $headers = null )
     {
         $this->lastError = false;
+        $this->lastHttpCode = 0;
 
         if( !$post && null !== ( $fetch = $this->getCache( $url ) ) )
             return $fetch;
@@ -210,7 +217,7 @@ class Fetcher
             $fetch = $this->fetchSingle( $host, $curl, $url, $post, $data, $ignoreCodes, $headers )[0];
 
             if( false !== $fetch ||
-                ( isset( $ignoreCodes ) && in_array( curl_getinfo( $curl, CURLINFO_HTTP_CODE ), $ignoreCodes ) ) )
+                ( isset( $ignoreCodes ) && in_array( $this->lastHttpCode, $ignoreCodes ) ) )
             {
                 if( !$post )
                     $this->setCache( $url, $fetch );
@@ -232,7 +239,7 @@ class Fetcher
                 return $fetch;
             }
 
-            if( curl_getinfo( $curl, CURLINFO_HTTP_CODE ) === 0 )
+            if( $this->lastHttpCode === 0 )
             {
                 curl_close( $curl );
                 unset( $this->curls[$i] );
@@ -302,6 +309,8 @@ class Fetcher
             {
                 $curl = $this->curls[$i];
                 $data = curl_multi_getcontent( $curl );
+                if( $data === null )
+                    $data = false;
                 $data = $this->fetchResult( $data, $host, $curl, $ignoreCodes );
                 $multiData[$host] = $data;
 
@@ -336,7 +345,8 @@ class Fetcher
     private function fetchResult( $data, $host, $curl, $ignoreCodes )
     {
         $code = curl_getinfo( $curl, CURLINFO_HTTP_CODE );
-        if( 0 !== ( $errno = curl_errno( $curl ) ) || $code !== 200 || false === $data )
+        $this->lastHttpCode = $code;
+        if( 0 !== ( $errno = curl_errno( $curl ) ) || $code >= 300 || $code < 200 || false === $data )
         {
             if( !isset( $ignoreCodes ) || $errno !== 0 || !in_array( $code, $ignoreCodes ) )
             {
