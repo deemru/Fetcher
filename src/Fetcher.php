@@ -217,7 +217,7 @@ class Fetcher
             $fetch = $this->fetchSingle( $host, $curl, $url, $post, $data, $ignoreCodes, $headers )[0];
 
             if( false !== $fetch ||
-                ( isset( $ignoreCodes ) && in_array( $this->lastHttpCode, $ignoreCodes ) ) )
+                ( is_array( $ignoreCodes ) && in_array( $this->lastHttpCode, $ignoreCodes ) ) )
             {
                 if( !$post )
                     $this->setCache( $url, $fetch );
@@ -348,7 +348,7 @@ class Fetcher
         $this->lastHttpCode = $code;
         if( 0 !== ( $errno = curl_errno( $curl ) ) || $code >= 300 || $code < 200 || false === $data )
         {
-            if( !isset( $ignoreCodes ) || $errno !== 0 || !in_array( $code, $ignoreCodes ) )
+            if( !is_array( $ignoreCodes ) || $errno !== 0 || !in_array( $code, $ignoreCodes ) )
             {
                 $curl_error = curl_error( $curl );
                 if( is_string( $data ) && $this->json && false !== ( $json = $this->jd( $data ) ) )
@@ -394,7 +394,7 @@ class Fetcher
         $now = microtime( true );
 
         if( $now - $this->cacheLastSet > $this->cacheTimeout )
-            $this->cache = [ $key => $value ];
+            $this->cache = [ $key => [ $value, $now ] ];
         else
         {
             if( count( $this->cache ) >= $this->cacheSize )
@@ -428,6 +428,9 @@ class Fetcher
     public function setBest( $url, $scoreFunction )
     {
         $multis = $this->fetchMulti( $url );
+        if( false === $multis )
+            return;
+
         $scores = [];
         $i = 0;
         foreach( $multis as $values )
